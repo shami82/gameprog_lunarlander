@@ -204,12 +204,14 @@ void update()
 
         for (int i = 0; i < NUMBER_OF_TILES; i++){ // lose condition for landing on tiles
             if (!gTiles[i].isActive()) continue;
-            if (gBalloon->isCollidingBottom() && gBalloon->isColliding(&gTiles[i])){
+            if (!gHasLost && gBalloon->isCollidingBottom() && gBalloon->isColliding(&gTiles[i])){
                 gHasLost = true;
+                gBalloon->setTexture("assets/crashb.PNG");
                 break;
             }
-            if (gFuelRemaining == 0 && !gBalloon->isCollidingBottom()){ // runing out of fuel and midair
+            if (!gHasLost && gFuelRemaining == 0 && !gBalloon->isCollidingBottom()){ // runing out of fuel and midair
                 gHasLost = true;
+                gBalloon->setTexture("assets/crashb.PNG");
                 break;
             }
         }
@@ -235,8 +237,6 @@ void update()
 
         gBalloon->setPosition(balloonPos);
 
-        // TODO: MAKE SURE THE BALLOON STAYS WITHIN FRAME
-
         for (int i = 0; i < NUMBER_OF_LANDING; i++){
             gLandingBlocks[i].update(FIXED_TIMESTEP, nullptr, 0, nullptr, 0);
         }
@@ -246,7 +246,7 @@ void update()
         deltaTime -= FIXED_TIMESTEP;
     }
 
-    // ADD THE LOGIC FOR EWNDING THE GAME ------------------------------------
+    // TODO: ADD MOVING PLATFORM IN GAME ------------------------------------
 }
 
 void render()
