@@ -114,8 +114,8 @@ void initialise()
     };
 
     int landingBlockIndex = 0;
-    for (int pad = 0; pad < 3; pad++) {
-        for (int i = 0; i < 4; i++) {
+    for (int pad = 0; pad < 3; pad++){
+        for (int i = 0; i < 4; i++){
             int blockIndex = landingPadIndices[pad][i];
             if (blockIndex == -1) continue; // for the placeholder
 
@@ -185,15 +185,15 @@ void update()
         gBalloon->update(FIXED_TIMESTEP, gTiles, NUMBER_OF_TILES, gLandingBlocks, NUMBER_OF_LANDING);
 
         for (int i = 0; i < NUMBER_OF_LANDING; i++){ // win condiiton for landing
-            if (!gLandingBlocks[i].isActive()) {
+            if (!gLandingBlocks[i].isActive()){
                 gHasWon = true;
                 break;
             }
         }
 
-        for (int i = 0; i < NUMBER_OF_TILES; i++) { // lose condition for landing on tiles
+        for (int i = 0; i < NUMBER_OF_TILES; i++){ // lose condition for landing on tiles
             if (!gTiles[i].isActive()) continue;
-            if (gBalloon->isCollidingTop() && gBalloon->isColliding(&gTiles[i])) {
+            if (gBalloon->isCollidingTop() && gBalloon->isColliding(&gTiles[i])){
                 gHasLost = true;
                 break;
             }
