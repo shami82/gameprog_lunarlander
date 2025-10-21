@@ -3,7 +3,7 @@
 // Global Constants
 constexpr int SCREEN_WIDTH  = 990,
               SCREEN_HEIGHT = 720,
-              FPS           = 120;
+              FPS           = 60;
 
 constexpr char BG_COLOUR[]    = "#000000";
 constexpr Vector2 ORIGIN      = { SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 };
@@ -13,12 +13,15 @@ constexpr int   NUMBER_OF_TILES         = 66,
 constexpr float TILE_DIMENSION          = 15.0f,
                 // in m/ms², since delta time is in ms
                 ACCELERATION_OF_GRAVITY = 100.0f, // LOWER GRAVITY
-                FIXED_TIMESTEP          = 1.0f / 60.0f;
+                FIXED_TIMESTEP          = 1.0f / 60.0f,
+                MAX_FUEL                = 100.0f,
+                FUEL_CONSUMPTION_RATE   = 0.1f;
 
 // Global Variables
 AppStatus gAppStatus   = RUNNING;
 float gPreviousTicks   = 0.0f,
-      gTimeAccumulator = 0.0f;
+      gTimeAccumulator = 0.0f,
+      gFuelRemaining   = MAX_FUEL;
 
 Entity *gBackground = nullptr;
 Entity *gBalloon = nullptr;
@@ -144,23 +147,31 @@ void processInput()
     Vector2 acceleration = gBalloon->getAcceleration();
     acceleration.y = ACCELERATION_OF_GRAVITY;
 
-    if (IsKeyDown(KEY_A)){ // animation and movement to the left
-        acceleration.x -= 75.0f;  // accelerate to the left
-        if (gBalloon->getVelocity().x < -150.0f)
-            gBalloon->setTexture("assets/rightestb.PNG");
-        else
-            gBalloon->setTexture("assets/rightb.PNG");
-    }
-    else if (IsKeyDown(KEY_D)){ // animation and movement to the right
-        acceleration.x += 75.0f;  // accelerate to the right
-        if (gBalloon->getVelocity().x > 150.0f)
-            gBalloon->setTexture("assets/leftestb.PNG");
-        else
-            gBalloon->setTexture("assets/leftb.PNG");
-    }
+    if (gFuelRemaining > 0.0f){
+        if (IsKeyDown(KEY_A)){ // animation and movement to the left
+            acceleration.x -= 75.0f;  // accelerate to the left
+            gFuelRemaining -= FUEL_CONSUMPTION_RATE;
+            if (gBalloon->getVelocity().x < -150.0f)
+                gBalloon->setTexture("assets/rightestb.PNG");
+            else
+                gBalloon->setTexture("assets/rightb.PNG");
+        }
+        else if (IsKeyDown(KEY_D)){ // animation and movement to the right
+            acceleration.x += 75.0f;  // accelerate to the right
+            gFuelRemaining -= FUEL_CONSUMPTION_RATE;
+            if (gBalloon->getVelocity().x > 150.0f)
+                gBalloon->setTexture("assets/leftestb.PNG");
+            else
+                gBalloon->setTexture("assets/leftb.PNG");
+        }
 
-    if (IsKeyDown(KEY_W) && !(gBalloon->isCollidingBottom())) acceleration.y += -120.0f;;
-
+        if (IsKeyDown(KEY_W) && !(gBalloon->isCollidingBottom())){ 
+            acceleration.y += -120.0f;
+            gFuelRemaining -= FUEL_CONSUMPTION_RATE;
+        }
+        if (gFuelRemaining < 0.0f) gFuelRemaining = 0.0f; // cant have neg fuel
+    }
+    
     gBalloon->setAcceleration(acceleration);
 
     if (IsKeyPressed(KEY_Q) || WindowShouldClose()) gAppStatus = TERMINATED;
@@ -184,8 +195,8 @@ void update()
     while (deltaTime >= FIXED_TIMESTEP){
         gBalloon->update(FIXED_TIMESTEP, gTiles, NUMBER_OF_TILES, gLandingBlocks, NUMBER_OF_LANDING);
 
-        for (int i = 0; i < NUMBER_OF_LANDING; i++){ // win condiiton for landing
-            if (!gLandingBlocks[i].isActive()){
+        for (int i = 0; i < NUMBER_OF_LANDING; i++){ // win condition for landing on pads
+            if (gBalloon->isCollidingBottom() && gBalloon->isColliding(&gLandingBlocks[i])){
                 gHasWon = true;
                 break;
             }
@@ -193,7 +204,11 @@ void update()
 
         for (int i = 0; i < NUMBER_OF_TILES; i++){ // lose condition for landing on tiles
             if (!gTiles[i].isActive()) continue;
-            if (gBalloon->isCollidingTop() && gBalloon->isColliding(&gTiles[i])){
+            if (gBalloon->isCollidingBottom() && gBalloon->isColliding(&gTiles[i])){
+                gHasLost = true;
+                break;
+            }
+            if (gFuelRemaining == 0 && !gBalloon->isCollidingBottom()){ // runing out of fuel and midair
                 gHasLost = true;
                 break;
             }
@@ -253,13 +268,17 @@ void render()
     gBalloon->render();
     gBalloon->renderCollider();
 
+    char fuelText[64];
+    sprintf(fuelText, "FUEL: %.1f", gFuelRemaining);
+    DrawText(fuelText, 10, 10, 25, BLACK);
+
     if (gHasWon){
         DrawText("YOU LANDED SAFELY!", SCREEN_WIDTH / 2 - MeasureText("YOU LANDED SAFELY!", 30) / 2,
-                SCREEN_HEIGHT - 40, 30, ColorFromHex("0x280000"));
+                SCREEN_HEIGHT - 40, 30, BLACK);
     } 
     else if (gHasLost){
         DrawText("YOU CRASHED!", SCREEN_WIDTH / 2 - MeasureText("YOU CRASHED!", 30) / 2,
-                SCREEN_HEIGHT - 40, 30, ColorFromHex("0x280000"));
+                SCREEN_HEIGHT - 40, 30, BLACK);
     }
 
     EndDrawing();
