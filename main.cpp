@@ -21,12 +21,14 @@ constexpr float TILE_DIMENSION          = 15.0f,
 AppStatus gAppStatus   = RUNNING;
 float gPreviousTicks   = 0.0f,
       gTimeAccumulator = 0.0f,
-      gFuelRemaining   = MAX_FUEL;
+      gFuelRemaining   = MAX_FUEL,
+      gBirdTime = 0.0f; // to track the movement
 
 Entity *gBackground = nullptr;
 Entity *gBalloon = nullptr;
 Entity *gTiles  = nullptr;
 Entity *gLandingBlocks = nullptr;
+Entity *gBird = nullptr; // obstacle
 
 bool gHasWon = false;
 bool gHasLost = false;
@@ -48,8 +50,7 @@ void initialise()
     gBackground = new Entity(
         ORIGIN,                                         // position
         { (float)SCREEN_WIDTH, (float)SCREEN_HEIGHT },  // size
-        // TODO: make bg that fits current tile layout
-        "assets/regbg.PNG",                             // texture file address
+        "assets/regbgwhill.PNG",                        // texture file address
         // "assets/bgnohill.PNG",                          // texture file address
         NONE                                            // type
     );
@@ -142,6 +143,18 @@ void initialise()
         }
     }
 
+    /*
+    ----------- MOVING BIRD (OBSTACLE) -----------
+    */
+    gBird = new Entity(
+        { TILE_DIMENSION * 7.0f, SCREEN_HEIGHT / 3.0f },  // starting around tile 7ish
+        { 2*TILE_DIMENSION, 2*TILE_DIMENSION },               // size
+        "assets/birdright.PNG",                           // starts of right
+        PLATFORM                                          // entity type
+    );
+
+    gBird->setColliderDimensions({ 2*TILE_DIMENSION, 2*TILE_DIMENSION });
+
     SetTargetFPS(FPS);
 }
 
@@ -150,7 +163,7 @@ void processInput()
     Vector2 acceleration = gBalloon->getAcceleration();
     acceleration.y = ACCELERATION_OF_GRAVITY;
 
-    if (gFuelRemaining > 0.0f && (!gHasWon || !gHasLost)){ // no moving after winning/losing
+    if (gFuelRemaining > 0.0f && (!gHasWon && !gHasLost)){ // no moving after winning/losing
         if (IsKeyDown(KEY_A)){ // animation and movement to the left
             acceleration.x -= 75.0f;  // accelerate to the left
             gFuelRemaining -= FUEL_CONSUMPTION_RATE;
@@ -200,11 +213,15 @@ void update()
     while (deltaTime >= FIXED_TIMESTEP){
         gBalloon->update(FIXED_TIMESTEP, gTiles, NUMBER_OF_TILES, gLandingBlocks, NUMBER_OF_LANDING);
 
-        for (int i = 0; i < NUMBER_OF_LANDING; i++){ // win condition for landing on pads
-            if (gBalloon->getLastBottomCollision() == &gLandingBlocks[i]){
-                gHasWon = true;
-                gBalloon->setTexture("assets/idleb.PNG");
-                break;
+        // TODO: detects as win when it hits the tile next to first landing pad
+              // either change the tile to a pad too or leave it in
+        if (!gHasLost){
+            for (int i = 0; i < NUMBER_OF_LANDING; i++){ // win condition for landing on pads
+                if (gBalloon->getLastBottomCollision() == &gLandingBlocks[i]){
+                    gHasWon = true;
+                    gBalloon->setTexture("assets/idleb.PNG");
+                    break;
+                }
             }
         }
 
@@ -256,7 +273,35 @@ void update()
         deltaTime -= FIXED_TIMESTEP;
     }
 
-    // TODO: ADD MOVING PLATFORM IN GAME ------------------------------------
+    // bird obstacle
+    gBirdTime += FIXED_TIMESTEP;
+
+    // move as a sin wave
+    float birdAmplitude = 40.0f; // vertical up and down
+    float birdSpeed = 1.5f; // speed left and right
+    float birdFrequency = 3.0f; // bounciness
+
+    // stay between the 1st and 14th tiles and ttop third of the screen
+    float birdRange = (TILE_DIMENSION * 15.0f) - (TILE_DIMENSION * 1.0f);
+    float birdCenterX = ((TILE_DIMENSION * 15.0f) + (TILE_DIMENSION * 1.0f)) / 2.0f;
+    float birdX = birdCenterX + (birdRange / 2.0f) * sin(birdSpeed * gBirdTime);
+    float birdY = (SCREEN_HEIGHT / 2.0f) + birdAmplitude * sin(birdFrequency * gBirdTime);
+
+    // changing the texture based on direction
+    static float lastX = birdX;
+    if (birdX > lastX)
+        gBird->setTexture("assets/birdright.PNG");
+    else if (birdX < lastX)
+        gBird->setTexture("assets/birdleft.PNG");
+    lastX = birdX;
+
+    gBird->setPosition({ birdX, birdY }); // position
+
+    if (gBalloon->isColliding(gBird) && !gHasWon && !gHasLost){ // losing when hitting the bird
+        gHasLost = true;
+        gBalloon->setTexture("assets/crashb.PNG");
+    }
+
 }
 
 void render()
@@ -277,6 +322,9 @@ void render()
 
     gBalloon->render();
     // gBalloon->renderCollider(); // for debugging collider dims
+
+    gBird->render();
+    // gBird->renderCollider(); // for debugging collider dims
 
     char fuelText[64];
     sprintf(fuelText, "FUEL: %.1f", gFuelRemaining);
@@ -326,6 +374,7 @@ void shutdown()
     delete gBalloon;
     delete[] gTiles;
     delete[] gLandingBlocks;
+    delete gBird;
     CloseWindow();
 }
 
