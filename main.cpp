@@ -48,7 +48,9 @@ void initialise()
     gBackground = new Entity(
         ORIGIN,                                         // position
         { (float)SCREEN_WIDTH, (float)SCREEN_HEIGHT },  // size
-        "assets/bgnohill.PNG",                          // texture file address
+        // TODO: make bg that fits current tile layout
+        "assets/regbg.PNG",                             // texture file address
+        // "assets/bgnohill.PNG",                          // texture file address
         NONE                                            // type
     );
 
@@ -133,7 +135,7 @@ void initialise()
             gLandingBlocks[landingBlockIndex].setEntityType(BLOCK);
             gLandingBlocks[landingBlockIndex].setScale({TILE_DIMENSION, TILE_DIMENSION});
             // tiny increase in collider dimensions height bcuz overlap w/ tile 
-            gLandingBlocks[landingBlockIndex].setColliderDimensions({TILE_DIMENSION, TILE_DIMENSION + 5.0f});
+            gLandingBlocks[landingBlockIndex].setColliderDimensions({TILE_DIMENSION, TILE_DIMENSION + 1.0f});
             gLandingBlocks[landingBlockIndex].setPosition(blockPosition);
 
             landingBlockIndex++;
