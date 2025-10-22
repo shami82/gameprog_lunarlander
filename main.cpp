@@ -9,7 +9,7 @@ constexpr char BG_COLOUR[]    = "#000000";
 constexpr Vector2 ORIGIN      = { SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 };
 
 constexpr int   NUMBER_OF_TILES         = 66,
-                NUMBER_OF_LANDING       = 11;
+                NUMBER_OF_LANDING       = 12;
 constexpr float TILE_DIMENSION          = 15.0f,
                 // in m/ms², since delta time is in ms
                 ACCELERATION_OF_GRAVITY = 80.0f, // LOWER GRAVITY
@@ -113,15 +113,15 @@ void initialise()
         ----------- LANDING PADS -----------
     */
     gLandingBlocks = new Entity[NUMBER_OF_LANDING];
-    int landingPadIndices[][4] = {
-        {5, 6, 7, 8},        // first landing pad
-        {23, 24, 25, 26},    // second landing pad
-        {54, 55, 56, -1}     // third landing pad (-1 placeholder)
+    int landingPadIndices[][5] = {
+        {4, 5, 6, 7, 8},        // first landing pad
+        {23, 24, 25, 26, -1},    // second landing pad (-1 placeholder)
+        {54, 55, 56, -1, -1}     // third landing pad (-1 placeholder)
     };
 
     int landingBlockIndex = 0;
     for (int pad = 0; pad < 3; pad++){
-        for (int i = 0; i < 4; i++){
+        for (int i = 0; i < 5; i++){
             int blockIndex = landingPadIndices[pad][i];
             if (blockIndex == -1) continue; // for the placeholder
 
@@ -192,6 +192,15 @@ void processInput()
     
     gBalloon->setAcceleration(acceleration);
 
+    if (IsKeyPressed(KEY_SPACE) && (gHasWon || gHasLost)){ // reset the balloon and game
+        gBalloon->setPosition({ ORIGIN.x, ORIGIN.y - 200.0f });
+        gBalloon->setAcceleration({ 0.0f, ACCELERATION_OF_GRAVITY });
+        gBalloon->setTexture("assets/idleb.PNG");
+        gHasWon = false;
+        gHasLost = false;
+        gFuelRemaining = MAX_FUEL;
+    }
+
     if (IsKeyPressed(KEY_Q) || WindowShouldClose()) gAppStatus = TERMINATED;
 }
 
@@ -213,13 +222,12 @@ void update()
     while (deltaTime >= FIXED_TIMESTEP){
         gBalloon->update(FIXED_TIMESTEP, gTiles, NUMBER_OF_TILES, gLandingBlocks, NUMBER_OF_LANDING);
 
-        // TODO: detects as win when it hits the tile next to first landing pad
-              // either change the tile to a pad too or leave it in
         if (!gHasLost){
             for (int i = 0; i < NUMBER_OF_LANDING; i++){ // win condition for landing on pads
                 if (gBalloon->getLastBottomCollision() == &gLandingBlocks[i]){
                     gHasWon = true;
                     gBalloon->setTexture("assets/idleb.PNG");
+                    gBalloon->setAcceleration({0.0f, 0.0f});
                     break;
                 }
             }
@@ -231,6 +239,7 @@ void update()
                 // landed on a tile
                 if (gBalloon->getLastBottomCollision() == &gTiles[i]){
                     gHasLost = true;
+                    gBalloon->setAcceleration({0.0f, 0.0f});
                     gBalloon->setTexture("assets/crashb.PNG");
                     break;
                 }
@@ -330,15 +339,6 @@ void render()
     sprintf(fuelText, "FUEL: %.1f", gFuelRemaining);
     DrawText(fuelText, 10, 10, 25, BLACK);
 
-    if (gHasWon){
-        DrawText("YOU LANDED SAFELY!", SCREEN_WIDTH / 2 - MeasureText("YOU LANDED SAFELY!", 30) / 2,
-                SCREEN_HEIGHT - 40, 30, BLACK);
-    } 
-    else if (gHasLost){
-        DrawText("YOU CRASHED!", SCREEN_WIDTH / 2 - MeasureText("YOU CRASHED!", 30) / 2,
-                SCREEN_HEIGHT - 40, 30, BLACK);
-    }
-
     Vector2 accel = gBalloon->getAcceleration();
     
     char accelText[128];
@@ -364,6 +364,38 @@ void render()
             margin + 50,
             fontSize,
             BLACK);
+
+    int messageFontSize = 40;
+    int messageYOffset  = 85; // fix the margin from bottom
+
+    if (gHasWon){
+        const char* winMsg = "YOU LANDED SAFELY!";
+        DrawText(
+            winMsg,
+            SCREEN_WIDTH / 2 - MeasureText(winMsg, messageFontSize) / 2,
+            SCREEN_HEIGHT - messageYOffset,
+            messageFontSize,
+            BLACK
+        );
+    } 
+    else if (gHasLost){
+        const char* loseMsg = "YOU CRASHED!";
+        DrawText(
+            loseMsg,
+            SCREEN_WIDTH / 2 - MeasureText(loseMsg, messageFontSize) / 2,
+            SCREEN_HEIGHT - messageYOffset,
+            messageFontSize,
+            BLACK
+        );
+    }
+
+    if (gHasWon || gHasLost){
+        DrawText("press [SPACE] to try again",
+                SCREEN_WIDTH / 2 - MeasureText("Press SPACE to try again", 20) / 2,
+                SCREEN_HEIGHT - 40,
+                20,
+                BLACK);
+    }
 
     EndDrawing();
 }
