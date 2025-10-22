@@ -12,7 +12,7 @@ constexpr int   NUMBER_OF_TILES         = 66,
                 NUMBER_OF_LANDING       = 11;
 constexpr float TILE_DIMENSION          = 15.0f,
                 // in m/ms², since delta time is in ms
-                ACCELERATION_OF_GRAVITY = 100.0f, // LOWER GRAVITY
+                ACCELERATION_OF_GRAVITY = 80.0f, // LOWER GRAVITY
                 FIXED_TIMESTEP          = 1.0f / 60.0f,
                 MAX_FUEL                = 100.0f,
                 FUEL_CONSUMPTION_RATE   = 0.1f;
@@ -171,6 +171,8 @@ void processInput()
         }
         if (gFuelRemaining < 0.0f) gFuelRemaining = 0.0f; // cant have neg fuel
     }
+    else 
+        gBalloon->setTexture("assets/crashb.PNG");
     
     gBalloon->setAcceleration(acceleration);
 

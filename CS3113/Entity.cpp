@@ -70,27 +70,30 @@ void Entity::checkCollisionY(Entity *collidableEntities, int collisionCheckCount
             // STEP 2: Calculate the distance between its centre and our centre
             //         and use that to calculate the amount of overlap between
             //         both bodies.
-            float yDistance = fabs(mPosition.y - collidableEntity->mPosition.y);
-            float yOverlap  = fabs(yDistance - (mColliderDimensions.y / 2.0f) - 
-                              (collidableEntity->mColliderDimensions.y / 2.0f));
+            Vector2 thisCenter = { // added the offsets to this
+                mPosition.x + mColliderOffset.x,
+                mPosition.y + mColliderOffset.y
+            };
+            Vector2 otherCenter = {
+                collidableEntity->mPosition.x + collidableEntity->mColliderOffset.x,
+                collidableEntity->mPosition.y + collidableEntity->mColliderOffset.y
+            };
+
+            float yDistance = fabs(thisCenter.y - otherCenter.y);
+            float yOverlap = fabs(yDistance - (mColliderDimensions.y / 2.0f) - 
+                                            (collidableEntity->mColliderDimensions.y / 2.0f));
             
             // STEP 3: "Unclip" ourselves from the other entity, and zero our
             //         vertical velocity.
-            if (mVelocity.y > 0) 
-            {
+            if (mVelocity.y > 0){
                 mPosition.y -= yOverlap;
                 mVelocity.y  = 0;
                 mIsCollidingBottom = true;
             } 
-            else if (mVelocity.y < 0) 
-            {
+            else if (mVelocity.y < 0){
                 mPosition.y += yOverlap;
                 mVelocity.y  = 0;
                 mIsCollidingTop = true;
-                // MAKE THE BLOCK DEACTIVE
-                if (collidableEntity->mEntityType == BLOCK)
-                    collidableEntity->mEntityStatus = INACTIVE;
-
             }
         }
     }
@@ -109,8 +112,19 @@ void Entity::checkCollisionX(Entity *collidableEntities, int collisionCheckCount
             // collision detections. So the solution I dound is only resolve X
             // collisions if there's significant Y overlap, preventing the 
             // platform we're standing on from acting like a wall.
-            float yDistance = fabs(mPosition.y - collidableEntity->mPosition.y);
-            float yOverlap  = fabs(yDistance - (mColliderDimensions.y / 2.0f) - (collidableEntity->mColliderDimensions.y / 2.0f));
+            Vector2 thisCenter = { // added the offsets to fix detection
+                mPosition.x + mColliderOffset.x,
+                mPosition.y + mColliderOffset.y
+            };
+            Vector2 otherCenter = {
+                collidableEntity->mPosition.x + collidableEntity->mColliderOffset.x,
+                collidableEntity->mPosition.y + collidableEntity->mColliderOffset.y
+            };
+
+            // prevent false x collision when only standing on something
+            float yDistance = fabs(thisCenter.y - otherCenter.y);
+            float yOverlap = fabs(yDistance - (mColliderDimensions.y / 2.0f) - 
+                                             (collidableEntity->mColliderDimensions.y / 2.0f));
 
             // Skip if barely touching vertically (standing on platform)
             if (yOverlap < Y_COLLISION_THRESHOLD) continue;
@@ -147,10 +161,21 @@ void Entity::checkCollisionX(Entity *collidableEntities, int collisionCheckCount
  */
 bool Entity::isColliding(Entity *other) const 
 {
-    float xDistance = fabs(mPosition.x - other->getPosition().x) - 
-        ((mColliderDimensions.x + other->getColliderDimensions().x) / 2.0f);
-    float yDistance = fabs(mPosition.y - other->getPosition().y) - 
-        ((mColliderDimensions.y + other->getColliderDimensions().y) / 2.0f);
+    // added the collider offsets to it to fix detection
+    Vector2 thisColliderCenter = {
+        mPosition.x + mColliderOffset.x,
+        mPosition.y + mColliderOffset.y
+    };
+
+    Vector2 otherColliderCenter = {
+        other->mPosition.x + other->mColliderOffset.x,
+        other->mPosition.y + other->mColliderOffset.y
+    };
+
+    float xDistance = fabs(thisColliderCenter.x - otherColliderCenter.x) - 
+        ((mColliderDimensions.x + other->mColliderDimensions.x) / 2.0f);
+    float yDistance = fabs(thisColliderCenter.y - otherColliderCenter.y) - 
+        ((mColliderDimensions.y + other->mColliderDimensions.y) / 2.0f);
 
     if (xDistance < 0.0f && yDistance < 0.0f) return true;
 
