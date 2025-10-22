@@ -45,6 +45,8 @@ private:
     EntityStatus mEntityStatus = ACTIVE;
     EntityType   mEntityType;
 
+    Entity* mLastBottomCollision = nullptr; // added to check collisions
+
     // bool isColliding(Entity *other) const;
     void checkCollisionY(Entity *collidableEntities, int collisionCheckCount);
     void checkCollisionX(Entity *collidableEntities, int collisionCheckCount);
@@ -54,6 +56,7 @@ private:
         mIsCollidingBottom = false;
         mIsCollidingRight  = false;
         mIsCollidingLeft   = false;
+        mLastBottomCollision = nullptr; // added to check collisions
     }
 
     void animate(float deltaTime);
@@ -112,6 +115,9 @@ public:
     bool isCollidingTop()    const { return mIsCollidingTop;    }
     bool isCollidingBottom() const { return mIsCollidingBottom; }
 
+    Entity* getLastBottomCollision() const { return mLastBottomCollision; }
+
+
     std::map<Direction, std::vector<int>> getAnimationAtlas() const { return mAnimationAtlas; }
 
     void setPosition(Vector2 newPosition)
@@ -123,8 +129,6 @@ public:
     void setScale(Vector2 newScale)
         { mScale = newScale;                       }
     void setTexture(const char *textureFilepath);
-    // void setTexture(const char *textureFilepath)
-    //     { mTexture = LoadTexture(textureFilepath); }
     void setColliderDimensions(Vector2 newDimensions) 
         { mColliderDimensions = newDimensions;     }
     void setColliderOffset(Vector2 offset) 

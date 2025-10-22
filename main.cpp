@@ -132,7 +132,8 @@ void initialise()
             gLandingBlocks[landingBlockIndex].setTexture("assets/landingblock.PNG");
             gLandingBlocks[landingBlockIndex].setEntityType(BLOCK);
             gLandingBlocks[landingBlockIndex].setScale({TILE_DIMENSION, TILE_DIMENSION});
-            gLandingBlocks[landingBlockIndex].setColliderDimensions({TILE_DIMENSION, TILE_DIMENSION});
+            // tiny increase in collider dimensions height bcuz overlap w/ tile 
+            gLandingBlocks[landingBlockIndex].setColliderDimensions({TILE_DIMENSION, TILE_DIMENSION + 5.0f});
             gLandingBlocks[landingBlockIndex].setPosition(blockPosition);
 
             landingBlockIndex++;
@@ -147,11 +148,11 @@ void processInput()
     Vector2 acceleration = gBalloon->getAcceleration();
     acceleration.y = ACCELERATION_OF_GRAVITY;
 
-    if (gFuelRemaining > 0.0f){
+    if (gFuelRemaining > 0.0f && (!gHasWon || !gHasLost)){ // no moving after winning/losing
         if (IsKeyDown(KEY_A)){ // animation and movement to the left
             acceleration.x -= 75.0f;  // accelerate to the left
             gFuelRemaining -= FUEL_CONSUMPTION_RATE;
-            if (gBalloon->getVelocity().x < -150.0f)
+            if (gBalloon->getVelocity().x < -50.0f)
                 gBalloon->setTexture("assets/rightestb.PNG");
             else
                 gBalloon->setTexture("assets/rightb.PNG");
@@ -159,7 +160,7 @@ void processInput()
         else if (IsKeyDown(KEY_D)){ // animation and movement to the right
             acceleration.x += 75.0f;  // accelerate to the right
             gFuelRemaining -= FUEL_CONSUMPTION_RATE;
-            if (gBalloon->getVelocity().x > 150.0f)
+            if (gBalloon->getVelocity().x > 50.0f)
                 gBalloon->setTexture("assets/leftestb.PNG");
             else
                 gBalloon->setTexture("assets/leftb.PNG");
@@ -198,23 +199,28 @@ void update()
         gBalloon->update(FIXED_TIMESTEP, gTiles, NUMBER_OF_TILES, gLandingBlocks, NUMBER_OF_LANDING);
 
         for (int i = 0; i < NUMBER_OF_LANDING; i++){ // win condition for landing on pads
-            if (gBalloon->isCollidingBottom() && gBalloon->isColliding(&gLandingBlocks[i])){
+            if (gBalloon->getLastBottomCollision() == &gLandingBlocks[i]){
                 gHasWon = true;
+                gBalloon->setTexture("assets/idleb.PNG");
                 break;
             }
         }
 
-        for (int i = 0; i < NUMBER_OF_TILES; i++){ // lose condition for landing on tiles
-            if (!gTiles[i].isActive()) continue;
-            if (!gHasLost && gBalloon->isCollidingBottom() && gBalloon->isColliding(&gTiles[i])){
-                gHasLost = true;
-                gBalloon->setTexture("assets/crashb.PNG");
-                break;
+        if (!gHasWon){
+            for (int i = 0; i < NUMBER_OF_TILES; i++){
+                if (!gTiles[i].isActive()) continue;
+                // landed on a tile
+                if (gBalloon->getLastBottomCollision() == &gTiles[i]){
+                    gHasLost = true;
+                    gBalloon->setTexture("assets/crashb.PNG");
+                    break;
+                }
             }
-            if (!gHasLost && gFuelRemaining == 0 && !gBalloon->isCollidingBottom()){ // runing out of fuel and midair
+            // out of fuel while floating
+            // TODO: DOUBLE CHECK BOTH FUEL CASES
+            if (gFuelRemaining == 0){ // not sure to add !gBalloon->isCollidingBottom() or not
                 gHasLost = true;
                 gBalloon->setTexture("assets/crashb.PNG");
-                break;
             }
         }
 
@@ -259,16 +265,16 @@ void render()
 
     for (int i = 0; i < NUMBER_OF_TILES; i++){
         gTiles[i].render();
-        gTiles[i].renderCollider();
+        // gTiles[i].renderCollider(); // for debugging collider dims
     }
 
     for (int i = 0; i < NUMBER_OF_LANDING; i++){
         gLandingBlocks[i].render();
-        gLandingBlocks[i].renderCollider();
+        // gLandingBlocks[i].renderCollider(); // for debugging collider dims
     }
 
     gBalloon->render();
-    gBalloon->renderCollider();
+    // gBalloon->renderCollider(); // for debugging collider dims
 
     char fuelText[64];
     sprintf(fuelText, "FUEL: %.1f", gFuelRemaining);
@@ -282,6 +288,32 @@ void render()
         DrawText("YOU CRASHED!", SCREEN_WIDTH / 2 - MeasureText("YOU CRASHED!", 30) / 2,
                 SCREEN_HEIGHT - 40, 30, BLACK);
     }
+
+    Vector2 accel = gBalloon->getAcceleration();
+    
+    char accelText[128];
+    sprintf(accelText, "X Acceleration: %.2f m/ms²\nY Acceleration: %.2f m/ms²", accel.x, accel.y);
+
+    int fontSize = 20;
+    int margin = 10;
+    int textWidth = MeasureText("X Acceleration: -0000.00", fontSize);
+
+    DrawText(accelText,
+             SCREEN_WIDTH - textWidth - margin - 30,
+             margin,
+             fontSize,
+             BLACK);
+    
+    Vector2 vel = gBalloon->getVelocity();
+
+    char velText[128];
+    sprintf(velText, "X Velocity: %.2f px/ms\nY Velocity: %.2f px/ms", vel.x, vel.y);
+
+    DrawText(velText,
+            SCREEN_WIDTH - textWidth - margin - 30,
+            margin + 50,
+            fontSize,
+            BLACK);
 
     EndDrawing();
 }

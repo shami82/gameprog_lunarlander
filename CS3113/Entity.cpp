@@ -85,10 +85,11 @@ void Entity::checkCollisionY(Entity *collidableEntities, int collisionCheckCount
             
             // STEP 3: "Unclip" ourselves from the other entity, and zero our
             //         vertical velocity.
-            if (mVelocity.y > 0){
+            if (mVelocity.y >= 0){
                 mPosition.y -= yOverlap;
                 mVelocity.y  = 0;
                 mIsCollidingBottom = true;
+                mLastBottomCollision = collidableEntity;  // added to track the last collision
             } 
             else if (mVelocity.y < 0){
                 mPosition.y += yOverlap;
