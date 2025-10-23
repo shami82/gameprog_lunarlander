@@ -2,11 +2,11 @@
 
 ## Controls
 - Player/Balloon
- - [W] to accelerate up
- - [A] to accelerate left
- - [D] to accelerate right
+  - [W] to accelerate up
+  - [A] to accelerate left
+  - [D] to accelerate right
 - Other
- - [SPACE] to restart the game
+  - [SPACE] to restart the game
 
 ## Rules
 - Land on any of the landing pads to win
