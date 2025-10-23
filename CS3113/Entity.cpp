@@ -14,7 +14,7 @@ Entity::Entity(Vector2 position, Vector2 scale, Texture2D texture,
         : mPosition {position}, mVelocity {0.0f, 0.0f}, 
         mAcceleration {0.0f, 0.0f}, mScale {scale}, mMovement {0.0f, 0.0f}, 
         mColliderDimensions {scale}, mColliderOffset {colliderOffset}, 
-        mTexture {LoadTexture(textureFilepath)}, 
+        mTexture {texture}, 
         mTextureType {SINGLE}, mDirection {RIGHT}, mAnimationAtlas {{}}, 
         mAnimationIndices {}, mFrameSpeed {0}, mSpeed {DEFAULT_SPEED}, 
         mAngle {0.0f}, mEntityType {entityType} { }
@@ -26,46 +26,15 @@ Entity::Entity(Vector2 position, Vector2 scale, Texture2D texture,
         : mPosition {position}, mVelocity {0.0f, 0.0f}, 
         mAcceleration {0.0f, 0.0f}, mMovement { 0.0f, 0.0f }, mScale {scale},
         mColliderDimensions {scale}, mColliderOffset {colliderOffset}, 
-        mTexture {LoadTexture(textureFilepath)}, 
+        mTexture {texture}, 
         mTextureType {ATLAS}, mSpriteSheetDimensions {spriteSheetDimensions},
         mAnimationAtlas {animationAtlas}, mDirection {RIGHT},
         mAnimationIndices {animationAtlas.at(RIGHT)}, 
         mFrameSpeed {DEFAULT_FRAME_SPEED}, mAngle { 0.0f }, 
         mSpeed { DEFAULT_SPEED }, mEntityType {entityType} { }
 
-// Entity::Entity(Vector2 position, Vector2 scale, const char *textureFilepath, 
-//         EntityType entityType, Vector2 colliderOffset) 
-//         : mPosition {position}, mVelocity {0.0f, 0.0f}, 
-//         mAcceleration {0.0f, 0.0f}, mScale {scale}, mMovement {0.0f, 0.0f}, 
-//         mColliderDimensions {scale}, mColliderOffset {colliderOffset}, 
-//         mTexture {LoadTexture(textureFilepath)}, 
-//         mTextureType {SINGLE}, mDirection {RIGHT}, mAnimationAtlas {{}}, 
-//         mAnimationIndices {}, mFrameSpeed {0}, mSpeed {DEFAULT_SPEED}, 
-//         mAngle {0.0f}, mEntityType {entityType} { }
-
-// Entity::Entity(Vector2 position, Vector2 scale, const char *textureFilepath, 
-//         TextureType textureType, Vector2 spriteSheetDimensions, 
-//         std::map<Direction, std::vector<int>> animationAtlas, 
-//         EntityType entityType, Vector2 colliderOffset) 
-//         : mPosition {position}, mVelocity {0.0f, 0.0f}, 
-//         mAcceleration {0.0f, 0.0f}, mMovement { 0.0f, 0.0f }, mScale {scale},
-//         mColliderDimensions {scale}, mColliderOffset {colliderOffset}, 
-//         mTexture {LoadTexture(textureFilepath)}, 
-//         mTextureType {ATLAS}, mSpriteSheetDimensions {spriteSheetDimensions},
-//         mAnimationAtlas {animationAtlas}, mDirection {RIGHT},
-//         mAnimationIndices {animationAtlas.at(RIGHT)}, 
-//         mFrameSpeed {DEFAULT_FRAME_SPEED}, mAngle { 0.0f }, 
-//         mSpeed { DEFAULT_SPEED }, mEntityType {entityType} { }
-
-
 Entity::~Entity() { UnloadTexture(mTexture); };
 
-// void Entity::setTexture(const char* filename){
-//     if (mTexture.id != 0){
-//         UnloadTexture(mTexture);
-//     }
-//     mTexture = LoadTexture(filename);
-// }
 void Entity::setTexture(Texture2D texture){
     mTexture = texture;
 }
@@ -89,14 +58,10 @@ void Entity::checkCollisionY(Entity *collidableEntities, int collisionCheckCount
 {
     for (int i = 0; i < collisionCheckCount; i++)
     {
-        // STEP 1: For every entity that our player can collide with...
         Entity *collidableEntity = &collidableEntities[i];
         
         if (isColliding(collidableEntity))
         {
-            // STEP 2: Calculate the distance between its centre and our centre
-            //         and use that to calculate the amount of overlap between
-            //         both bodies.
             Vector2 thisCenter = { // added the offsets to this
                 mPosition.x + mColliderOffset.x,
                 mPosition.y + mColliderOffset.y
@@ -110,8 +75,6 @@ void Entity::checkCollisionY(Entity *collidableEntities, int collisionCheckCount
             float yOverlap = fabs(yDistance - (mColliderDimensions.y / 2.0f) - 
                                             (collidableEntity->mColliderDimensions.y / 2.0f));
             
-            // STEP 3: "Unclip" ourselves from the other entity, and zero our
-            //         vertical velocity.
             if (mVelocity.y >= 0){
                 mPosition.y -= yOverlap;
                 mVelocity.y  = 0;
@@ -135,11 +98,6 @@ void Entity::checkCollisionX(Entity *collidableEntities, int collisionCheckCount
         
         if (isColliding(collidableEntity))
         {            
-            // When standing on a platform, we're always slightly overlapping
-            // it vertically due to gravity, which causes false horizontal
-            // collision detections. So the solution I dound is only resolve X
-            // collisions if there's significant Y overlap, preventing the 
-            // platform we're standing on from acting like a wall.
             Vector2 thisCenter = { // added the offsets to fix detection
                 mPosition.x + mColliderOffset.x,
                 mPosition.y + mColliderOffset.y
@@ -149,12 +107,10 @@ void Entity::checkCollisionX(Entity *collidableEntities, int collisionCheckCount
                 collidableEntity->mPosition.y + collidableEntity->mColliderOffset.y
             };
 
-            // prevent false x collision when only standing on something
             float yDistance = fabs(thisCenter.y - otherCenter.y);
             float yOverlap = fabs(yDistance - (mColliderDimensions.y / 2.0f) - 
                                              (collidableEntity->mColliderDimensions.y / 2.0f));
 
-            // Skip if barely touching vertically (standing on platform)
             if (yOverlap < Y_COLLISION_THRESHOLD) continue;
 
             float xDistance = fabs(mPosition.x - collidableEntity->mPosition.x);
@@ -164,13 +120,12 @@ void Entity::checkCollisionX(Entity *collidableEntities, int collisionCheckCount
                 mPosition.x     -= xOverlap;
                 mVelocity.x      = 0;
 
-                // Collision!
                 mIsCollidingRight = true;
-            } else if (mVelocity.x < 0) {
+            } 
+            else if (mVelocity.x < 0) {
                 mPosition.x    += xOverlap;
                 mVelocity.x     = 0;
  
-                // Collision!
                 mIsCollidingLeft = true;
             }
         }
@@ -232,25 +187,6 @@ void Entity::animate(float deltaTime)
     }
 }
 
-void Entity::displayCollider() 
-{
-    // draw the collision box
-    Rectangle colliderBox = {
-        mPosition.x - mColliderDimensions.x / 2.0f,  
-        mPosition.y - mColliderDimensions.y / 2.0f,  
-        mColliderDimensions.x,                        
-        mColliderDimensions.y                        
-    };
-
-    DrawRectangleLines(
-        colliderBox.x,      // Top-left X
-        colliderBox.y,      // Top-left Y
-        colliderBox.width,  // Width
-        colliderBox.height, // Height
-        GREEN               // Color
-    );
-}
-
 void Entity::update(float deltaTime, Entity *collidableEntities, 
     int collisionCheckCount,Entity *collidableEntities2, 
     int collisionCheckCount2)
@@ -267,10 +203,7 @@ void Entity::update(float deltaTime, Entity *collidableEntities,
     // ––––– JUMPING ––––– //
     if (mIsJumping)
     {
-        // STEP 1: Immediately return the flag to its original false state
         mIsJumping = false;
-        
-        // STEP 2: The player now acquires an upward velocity
         mVelocity.y -= mJumpingPower;
     }
 
@@ -339,7 +272,6 @@ void Entity::render()
         mAngle, WHITE
     );
 
-    // displayCollider();
 }
 
 void Entity::renderCollider(Color color){ // to be able to see the collision dimensions

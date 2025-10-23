@@ -32,13 +32,13 @@ AppStatus gAppStatus   = RUNNING;
 float gPreviousTicks   = 0.0f,
       gTimeAccumulator = 0.0f,
       gFuelRemaining   = MAX_FUEL,
-      gBirdTime = 0.0f; // to track the movement
+      gBirdTime = 0.0f;   // to track the movement
 
 Entity *gBackground = nullptr;
 Entity *gBalloon = nullptr;
 Entity *gTiles  = nullptr;
 Entity *gLandingBlocks = nullptr;
-Entity *gBird = nullptr; // obstacle
+Entity *gBird = nullptr;  // obstacle
 Entity *gBird2 = nullptr; // second obstacle
 
 bool gHasWon = false;
@@ -146,8 +146,8 @@ void initialise()
     gLandingBlocks = new Entity[NUMBER_OF_LANDING];
     int landingPadIndices[][5] = {
         {4, 5, 6, 7, 8},        // first landing pad
-        {23, 24, 25, 26, -1},    // second landing pad (-1 placeholder)
-        {54, 55, 56, -1, -1}     // third landing pad (-1 placeholder)
+        {23, 24, 25, 26, -1},   // second landing pad (-1 placeholder)
+        {54, 55, 56, -1, -1}    // third landing pad (-1 placeholder)
     };
 
     int landingBlockIndex = 0;
@@ -156,7 +156,7 @@ void initialise()
             int blockIndex = landingPadIndices[pad][i];
             if (blockIndex == -1) continue; // for the placeholder
 
-            // tiles psoition
+            // tiles position
             Vector2 blockPosition = gTiles[blockIndex].getPosition();
 
             // make tile that's there inactive
@@ -180,7 +180,7 @@ void initialise()
     gBird = new Entity(
         { TILE_DIMENSION * 7.0f, SCREEN_HEIGHT / 3.0f },  // starting around tile 7ish
         { 2*TILE_DIMENSION, 2*TILE_DIMENSION },           // size
-        texBirdRight,                           // starts of right
+        texBirdRight,                                     // starts of right
         PLATFORM                                          // entity type
     );
 
@@ -192,11 +192,11 @@ void initialise()
     gBird2 = new Entity(
         { SCREEN_WIDTH - TILE_DIMENSION * 7.0f, SCREEN_HEIGHT * 0.3f }, // starts right side
         { 2*TILE_DIMENSION, 2*TILE_DIMENSION },             // size
-        texBirdLeft,                              // starts facing left
+        texBirdLeft,                                        // starts facing left
         PLATFORM                                            // entity type
     );
 
-    gBird2->setColliderDimensions({ 2 * TILE_DIMENSION, 2 * TILE_DIMENSION });
+    gBird2->setColliderDimensions({ 2*TILE_DIMENSION, 2*TILE_DIMENSION });
 
     SetTargetFPS(FPS);
 }
@@ -207,7 +207,7 @@ void processInput()
     acceleration.y = ACCELERATION_OF_GRAVITY;
 
     if (gFuelRemaining > 0.0f && (!gHasWon && !gHasLost)){ // no moving after winning/losing
-        if (IsKeyDown(KEY_A)){ // animation and movement to the left
+        if (IsKeyDown(KEY_A)){        // animation and movement to the left
             acceleration.x -= 75.0f;  // accelerate to the left
             gFuelRemaining -= FUEL_CONSUMPTION_RATE;
             if (gBalloon->getVelocity().x < -50.0f)
@@ -215,7 +215,7 @@ void processInput()
             else
                 gBalloon->setTexture(texRightB);
         }
-        else if (IsKeyDown(KEY_D)){ // animation and movement to the right
+        else if (IsKeyDown(KEY_D)){   // animation and movement to the right
             acceleration.x += 75.0f;  // accelerate to the right
             gFuelRemaining -= FUEL_CONSUMPTION_RATE;
             if (gBalloon->getVelocity().x > 50.0f)
@@ -288,8 +288,7 @@ void update()
                 }
             }
             // out of fuel while floating
-            // TODO: DOUBLE CHECK BOTH FUEL CASES
-            if (gFuelRemaining == 0){ // not sure to add !gBalloon->isCollidingBottom() or not
+            if (gFuelRemaining == 0){
                 gHasLost = true;
                 gBalloon->setTexture(texCrashB);
             }
@@ -330,8 +329,8 @@ void update()
 
     // move as a sin wave
     float birdAmplitude = 40.0f; // vertical up and down
-    float birdSpeed = 1.5f; // speed left and right
-    float birdFrequency = 3.0f; // bounciness
+    float birdSpeed = 1.5f;      // speed left and right
+    float birdFrequency = 3.0f;  // bounciness
 
     // stay between the 1st and 14th tiles and halfway down the screen
     float birdRange = (TILE_DIMENSION * 15.0f) - (TILE_DIMENSION * 1.0f);
@@ -433,7 +432,7 @@ void render()
             BLACK);
 
     int messageFontSize = 40;
-    int messageYOffset  = 85; // fix the margin from bottom
+    int messageYOffset  = 85; // margin from bottom
 
     if (gHasWon){
         const char* winMsg = "YOU LANDED SAFELY!";

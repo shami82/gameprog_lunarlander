@@ -74,12 +74,6 @@ public:
         TextureType textureType, Vector2 spriteSheetDimensions, 
         std::map<Direction, std::vector<int>> animationAtlas, 
         EntityType entityType, Vector2 colliderOffset = {0.0f, 0.0f});
-    // Entity(Vector2 position, Vector2 scale, const char *textureFilepath, 
-    //     EntityType entityType, Vector2 colliderOffset = {0.0f, 0.0f});
-    // Entity(Vector2 position, Vector2 scale, const char *textureFilepath, 
-    //     TextureType textureType, Vector2 spriteSheetDimensions, 
-    //     std::map<Direction, std::vector<int>> animationAtlas, 
-    //     EntityType entityType, Vector2 colliderOffset = {0.0f, 0.0f});
     ~Entity();
 
     void update(float deltaTime, Entity *collidableEntities, int collisionCheckCount, Entity *collidableEntities2, 
@@ -90,7 +84,6 @@ public:
     void jump()       { mIsJumping = true;  }
     void activate()   { mEntityStatus  = ACTIVE;   }
     void deactivate() { mEntityStatus  = INACTIVE; }
-    void displayCollider();
 
     bool isActive() { return mEntityStatus == ACTIVE ? true : false; }
 
