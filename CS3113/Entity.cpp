@@ -9,7 +9,7 @@ Entity::Entity() : mPosition {0.0f, 0.0f}, mMovement {0.0f, 0.0f},
                    mAnimationAtlas {{}}, mAnimationIndices {}, mFrameSpeed {0},
                    mEntityType {NONE} { }
 
-Entity::Entity(Vector2 position, Vector2 scale, const char *textureFilepath, 
+Entity::Entity(Vector2 position, Vector2 scale, Texture2D texture, 
         EntityType entityType, Vector2 colliderOffset) 
         : mPosition {position}, mVelocity {0.0f, 0.0f}, 
         mAcceleration {0.0f, 0.0f}, mScale {scale}, mMovement {0.0f, 0.0f}, 
@@ -19,7 +19,7 @@ Entity::Entity(Vector2 position, Vector2 scale, const char *textureFilepath,
         mAnimationIndices {}, mFrameSpeed {0}, mSpeed {DEFAULT_SPEED}, 
         mAngle {0.0f}, mEntityType {entityType} { }
 
-Entity::Entity(Vector2 position, Vector2 scale, const char *textureFilepath, 
+Entity::Entity(Vector2 position, Vector2 scale, Texture2D texture, 
         TextureType textureType, Vector2 spriteSheetDimensions, 
         std::map<Direction, std::vector<int>> animationAtlas, 
         EntityType entityType, Vector2 colliderOffset) 
@@ -33,14 +33,41 @@ Entity::Entity(Vector2 position, Vector2 scale, const char *textureFilepath,
         mFrameSpeed {DEFAULT_FRAME_SPEED}, mAngle { 0.0f }, 
         mSpeed { DEFAULT_SPEED }, mEntityType {entityType} { }
 
+// Entity::Entity(Vector2 position, Vector2 scale, const char *textureFilepath, 
+//         EntityType entityType, Vector2 colliderOffset) 
+//         : mPosition {position}, mVelocity {0.0f, 0.0f}, 
+//         mAcceleration {0.0f, 0.0f}, mScale {scale}, mMovement {0.0f, 0.0f}, 
+//         mColliderDimensions {scale}, mColliderOffset {colliderOffset}, 
+//         mTexture {LoadTexture(textureFilepath)}, 
+//         mTextureType {SINGLE}, mDirection {RIGHT}, mAnimationAtlas {{}}, 
+//         mAnimationIndices {}, mFrameSpeed {0}, mSpeed {DEFAULT_SPEED}, 
+//         mAngle {0.0f}, mEntityType {entityType} { }
+
+// Entity::Entity(Vector2 position, Vector2 scale, const char *textureFilepath, 
+//         TextureType textureType, Vector2 spriteSheetDimensions, 
+//         std::map<Direction, std::vector<int>> animationAtlas, 
+//         EntityType entityType, Vector2 colliderOffset) 
+//         : mPosition {position}, mVelocity {0.0f, 0.0f}, 
+//         mAcceleration {0.0f, 0.0f}, mMovement { 0.0f, 0.0f }, mScale {scale},
+//         mColliderDimensions {scale}, mColliderOffset {colliderOffset}, 
+//         mTexture {LoadTexture(textureFilepath)}, 
+//         mTextureType {ATLAS}, mSpriteSheetDimensions {spriteSheetDimensions},
+//         mAnimationAtlas {animationAtlas}, mDirection {RIGHT},
+//         mAnimationIndices {animationAtlas.at(RIGHT)}, 
+//         mFrameSpeed {DEFAULT_FRAME_SPEED}, mAngle { 0.0f }, 
+//         mSpeed { DEFAULT_SPEED }, mEntityType {entityType} { }
+
 
 Entity::~Entity() { UnloadTexture(mTexture); };
 
-void Entity::setTexture(const char* filename){
-    if (mTexture.id != 0){
-        UnloadTexture(mTexture);
-    }
-    mTexture = LoadTexture(filename);
+// void Entity::setTexture(const char* filename){
+//     if (mTexture.id != 0){
+//         UnloadTexture(mTexture);
+//     }
+//     mTexture = LoadTexture(filename);
+// }
+void Entity::setTexture(Texture2D texture){
+    mTexture = texture;
 }
 
 /**

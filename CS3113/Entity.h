@@ -68,12 +68,18 @@ public:
     static constexpr float Y_COLLISION_THRESHOLD = 0.5f;
 
     Entity();
-    Entity(Vector2 position, Vector2 scale, const char *textureFilepath, 
+    Entity(Vector2 position, Vector2 scale, Texture2D texture, 
         EntityType entityType, Vector2 colliderOffset = {0.0f, 0.0f});
-    Entity(Vector2 position, Vector2 scale, const char *textureFilepath, 
+    Entity(Vector2 position, Vector2 scale, Texture2D texture, 
         TextureType textureType, Vector2 spriteSheetDimensions, 
         std::map<Direction, std::vector<int>> animationAtlas, 
         EntityType entityType, Vector2 colliderOffset = {0.0f, 0.0f});
+    // Entity(Vector2 position, Vector2 scale, const char *textureFilepath, 
+    //     EntityType entityType, Vector2 colliderOffset = {0.0f, 0.0f});
+    // Entity(Vector2 position, Vector2 scale, const char *textureFilepath, 
+    //     TextureType textureType, Vector2 spriteSheetDimensions, 
+    //     std::map<Direction, std::vector<int>> animationAtlas, 
+    //     EntityType entityType, Vector2 colliderOffset = {0.0f, 0.0f});
     ~Entity();
 
     void update(float deltaTime, Entity *collidableEntities, int collisionCheckCount, Entity *collidableEntities2, 
@@ -128,7 +134,8 @@ public:
         { mAcceleration = newAcceleration;         }
     void setScale(Vector2 newScale)
         { mScale = newScale;                       }
-    void setTexture(const char *textureFilepath);
+    // void setTexture(const char *textureFilepath);
+    void setTexture(Texture2D texture);
     void setColliderDimensions(Vector2 newDimensions) 
         { mColliderDimensions = newDimensions;     }
     void setColliderOffset(Vector2 offset) 
