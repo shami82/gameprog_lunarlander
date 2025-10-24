@@ -56,6 +56,17 @@ Texture2D texBG,
           texBirdLeft,
           texBirdRight;
 
+struct GameAudio{ // for music and sfx
+    Music bgm;
+    Sound wooshSound;
+    Sound winSound;
+    Sound loseSound;
+};
+
+GameAudio gState;
+bool gPlayedWinSound = false;
+bool gPlayedLoseSound = false;
+
 // Function Declarations
 void initialise();
 void processInput();
@@ -66,6 +77,7 @@ void shutdown();
 void initialise()
 {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Balloon Lander");
+    InitAudioDevice();
 
     texBG = LoadTexture("assets/regbgwhill.PNG");
     texIdleB = LoadTexture("assets/idleb.PNG");
@@ -78,6 +90,13 @@ void initialise()
     texLandingBlock = LoadTexture("assets/landingblock.PNG");
     texBirdLeft = LoadTexture("assets/birdleft.PNG");
     texBirdRight = LoadTexture("assets/birdright.PNG");
+
+    // music and sound effects
+    gState.bgm = LoadMusicStream("assets/nobonoko - cat.mp3");
+    SetMusicVolume(gState.bgm, 0.33f);
+    PlayMusicStream(gState.bgm);
+    gState.winSound = LoadSound("assets/win.wav");
+    gState.loseSound = LoadSound("assets/lose.wav");
 
     /*
         ----------- BACKGROUND -----------
@@ -242,6 +261,10 @@ void processInput()
         gHasWon = false;
         gHasLost = false;
         gFuelRemaining = MAX_FUEL;
+        gPlayedWinSound = false;
+        gPlayedLoseSound = false;
+        SeekMusicStream(gState.bgm, 0);
+        PlayMusicStream(gState.bgm);
     }
 
     if (IsKeyPressed(KEY_Q) || WindowShouldClose()) gAppStatus = TERMINATED;
@@ -249,6 +272,7 @@ void processInput()
 
 void update() 
 {
+    UpdateMusicStream(gState.bgm);
     // Delta time
     float ticks = (float) GetTime();
     float deltaTime = ticks - gPreviousTicks;
@@ -271,6 +295,12 @@ void update()
                     gHasWon = true;
                     gBalloon->setTexture(texIdleB);
                     gBalloon->setAcceleration({0.0f, 0.0f});
+                    StopMusicStream(gState.bgm);
+                    SeekMusicStream(gState.bgm, 0);
+                    if (!gPlayedWinSound){ // play it once
+                        PlaySound(gState.winSound);
+                        gPlayedWinSound = true;
+                    }
                     break;
                 }
             }
@@ -282,6 +312,12 @@ void update()
                 // landed on a tile
                 if (gBalloon->getLastBottomCollision() == &gTiles[i]){
                     gHasLost = true;
+                    StopMusicStream(gState.bgm);
+                    SeekMusicStream(gState.bgm, 0);
+                    if (!gPlayedLoseSound){ // play only once
+                        PlaySound(gState.loseSound);
+                        gPlayedLoseSound = true;
+                    }
                     gBalloon->setAcceleration({0.0f, 0.0f});
                     gBalloon->setTexture(texCrashB);
                     break;
@@ -290,6 +326,12 @@ void update()
             // out of fuel while floating
             if (gFuelRemaining == 0){
                 gHasLost = true;
+                StopMusicStream(gState.bgm);
+                SeekMusicStream(gState.bgm, 0);
+                if (!gPlayedLoseSound){ // play only once
+                    PlaySound(gState.loseSound);
+                    gPlayedLoseSound = true;
+                }
                 gBalloon->setTexture(texCrashB);
             }
         }
@@ -350,6 +392,12 @@ void update()
 
     if (gBalloon->isColliding(gBird) && !gHasWon && !gHasLost){ // losing when hitting the bird
         gHasLost = true;
+        StopMusicStream(gState.bgm);
+        SeekMusicStream(gState.bgm, 0);
+        if (!gPlayedLoseSound){ // play only once
+            PlaySound(gState.loseSound);
+            gPlayedLoseSound = true;
+        }
         gBalloon->setTexture(texCrashB);
     }
 
@@ -371,6 +419,12 @@ void update()
 
     if (gBalloon->isColliding(gBird2) && !gHasWon && !gHasLost){ // losing when hitting the bird
         gHasLost = true;
+        StopMusicStream(gState.bgm);
+        SeekMusicStream(gState.bgm, 0);
+        if (!gPlayedLoseSound){ // play only once
+            PlaySound(gState.loseSound);
+            gPlayedLoseSound = true;
+        }
         gBalloon->setTexture(texCrashB);
     }
 
@@ -468,6 +522,11 @@ void render()
 
 void shutdown() 
 {
+    UnloadMusicStream(gState.bgm);
+    UnloadSound(gState.wooshSound);
+    UnloadSound(gState.winSound);
+    UnloadSound(gState.loseSound);
+
     delete gBackground;
     delete gBalloon;
     delete[] gTiles;
@@ -485,6 +544,8 @@ void shutdown()
     UnloadTexture(texLandingBlock);
     UnloadTexture(texBirdLeft);
     UnloadTexture(texBirdRight);
+
+    CloseAudioDevice();
     CloseWindow();
 }
 
