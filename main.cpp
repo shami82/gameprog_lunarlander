@@ -331,7 +331,7 @@ void update()
                     PlaySound(gState.loseSound);
                     gPlayedLoseSound = true;
                 }
-                gBalloon->setAcceleration(0, ACCELERATION_OF_GRAVITY);
+                gBalloon->setAcceleration({0.0f, ACCELERATION_OF_GRAVITY});
                 gBalloon->setTexture(texCrashB);
             }
         }
@@ -398,7 +398,7 @@ void update()
             PlaySound(gState.loseSound);
             gPlayedLoseSound = true;
         }
-        gBalloon->setAcceleration(0, ACCELERATION_OF_GRAVITY);
+        gBalloon->setAcceleration({0.0f, ACCELERATION_OF_GRAVITY});
         gBalloon->setTexture(texCrashB);
     }
 
@@ -426,7 +426,7 @@ void update()
             PlaySound(gState.loseSound);
             gPlayedLoseSound = true;
         }
-        gBalloon->setAcceleration(0, ACCELERATION_OF_GRAVITY);
+        gBalloon->setAcceleration({0.0f, ACCELERATION_OF_GRAVITY});
         gBalloon->setTexture(texCrashB);
     }
 
