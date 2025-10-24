@@ -62,7 +62,6 @@ struct GameAudio{ // for music and sfx
     Sound winSound;
     Sound loseSound;
 };
-
 GameAudio gState;
 bool gPlayedWinSound = false;
 bool gPlayedLoseSound = false;
